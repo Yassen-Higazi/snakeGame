@@ -1,7 +1,6 @@
 import React from 'react';
 
-function Food({point}) {
-
+function Food({ point }) {
   return (
     <div
       className="point food"

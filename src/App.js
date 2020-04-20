@@ -5,78 +5,91 @@ import Food from './components/food';
 import './App.css';
 
 class SnakeGame extends React.Component {
-
-  speedRate = 10
+  cols = 50;
+  rows = 50;
+  boxSize = 2;
+  maxSpeed = 15;
+  speedRate = 10;
 
   state = {
-    cols: 50,
-    rows: 50,
     speed: 120,
     direction: 'RIGHT',
-    food: {col: 10, row: 10},
-    snake: [{col: 0, row: 0}, {col: 2, row: 0}],
-  }
+    food: { col: 10, row: 10 },
+    snake: [
+      { col: 0, row: 0 },
+      { col: 2, row: 0 },
+    ],
+  };
 
   componentDidUpdate() {
     this.checkIfAteFood();
     this.checkIfCollapse();
-    this.checkIfOutofBorders();
+    this.checkIfOutOfBorders();
   }
 
   componentDidMount() {
-    this.container = document.getElementById('container');
-    this.setState({food: this.getRandomPoint()});
+    this.setState({ food: this.getRandomPoint() });
     document.onkeydown = this.onkeydown;
-    this.interval = setInterval(this.moveSnake, this.state.speed);
+    this.loop();
+  }
+
+  loop() {
+    if (this.interval) clearInterval(this.interval);
+    this.interval = setInterval(
+      requestAnimationFrame,
+      this.state.speed,
+      this.moveSnake,
+    );
   }
 
   moveSnake = () => {
-    const {snake: points, direction} = this.state;
+    const { snake: points, direction } = this.state;
     const head = points[points.length - 1];
-    let newHead, newPoints = [...points];
+    let newHead,
+      newPoints = [...points];
 
     switch (direction) {
       case 'UP':
-        newHead = {...head, row: head.row - 2};
+        newHead = { ...head, row: head.row - this.boxSize };
         break;
-    
+
       case 'RIGHT':
-        newHead = {...head, col: head.col + 2};
+        newHead = { ...head, col: head.col + this.boxSize };
         break;
-    
+
       case 'LEFT':
-        newHead = {...head, col: head.col - 2};
+        newHead = { ...head, col: head.col - this.boxSize };
         break;
-    
+
       case 'DOWN':
-        newHead = {...head, row: head.row + 2};
+        newHead = { ...head, row: head.row + this.boxSize };
         break;
-    
+
       default:
-        newHead = {...head, col: head.col + 2};
+        newHead = { ...head, col: head.col + this.boxSize };
         break;
     }
 
-    
     newPoints.push(newHead);
     newPoints.shift();
-    this.setState({snake: newPoints});
-  }
+    this.setState({ snake: newPoints });
+  };
 
-  checkIfOutofBorders() {
+  checkIfOutOfBorders() {
     const head = this.state.snake[this.state.snake.length - 1];
-    if (head.col > 98 || head.col < 0 || head.row < 0 || head.row > 98) this.gameOver();
+    if (head.col > 98 || head.col < 0 || head.row < 0 || head.row > 98)
+      this.gameOver();
   }
 
   checkIfAteFood() {
     const head = this.state.snake[this.state.snake.length - 1];
     const food = this.state.food;
     if (head.col === food.col && food.row === head.row) {
-      this.enlargenSnake(food)
+      this.enlargenSnake();
       this.speedup();
-    };
+    }
   }
-  
+
   checkIfCollapse() {
     const snake = [...this.state.snake];
     const head = snake.pop();
@@ -88,78 +101,88 @@ class SnakeGame extends React.Component {
   onkeydown = (e) => {
     switch (e.keyCode) {
       case 37:
-        this.setState({'direction': 'LEFT'});
+        this.setState({ direction: 'LEFT' });
         break;
-      
+
       case 38:
-        this.setState({'direction': 'UP'});
+        this.setState({ direction: 'UP' });
         break;
-    
+
       case 39:
-        this.setState({'direction': 'RIGHT'});
+        this.setState({ direction: 'RIGHT' });
         break;
-      
+
       case 40:
-        this.setState({'direction': 'DOWN'});
+        this.setState({ direction: 'DOWN' });
         break;
-    
+
       default:
-        this.setState({'direction': 'RIGHT'});
+        this.setState({ direction: 'RIGHT' });
         break;
     }
-  }
+  };
 
   gameOver() {
     const end = window.confirm('Game Over. wanna try again??');
     if (!end) {
-      this.reset();
+      this.reset(false);
       return clearInterval(this.interval);
     } else {
       this.reset();
     }
   }
 
-  reset() {
-    this.setState({
-      speed: 700,
-      direction: 'RIGHT',
-      snake: [{col: 0, row: 0}, {col: 2, row: 0}],
-    });
+  reset(loop = true) {
+    this.setState(
+      {
+        speed: 120,
+        direction: 'RIGHT',
+        snake: [
+          { col: 0, row: 0 },
+          { col: 2, row: 0 },
+        ],
+        food: this.getRandomPoint(),
+      },
+      () => loop && this.loop(),
+    );
   }
 
   speedup() {
-    if (this.state.speed >= 10) {
-      this.setState({speed: this.state.speed - this.speedRate});
+    if (this.state.speed >= this.maxSpeed) {
+      this.setState({ speed: this.state.speed - this.speedRate });
     }
   }
 
   enlargenSnake() {
     const newSnake = [...this.state.snake];
     newSnake.unshift({});
-    this.setState({
-      snake: newSnake,
-      food: this.getRandomPoint(),
-    });
+    this.setState(
+      {
+        snake: newSnake,
+        food: this.getRandomPoint(),
+      },
+      () => this.loop(),
+    );
   }
 
   getRandomPoint() {
     const min = 1;
-    const max = 50;
+    const maxCols = this.cols;
+    const maxRows = this.rows;
     return {
-      col: Math.floor(Math.random() * (max - min + 1) + min / 2) * 2,
-      row: Math.floor(Math.random() * (max - min + 1) + min / 2) * 2,
-    }
+      col: Math.floor(Math.random() * (maxCols - min + 1) + min / 2) * 2,
+      row: Math.floor(Math.random() * (maxRows - min + 1) + min / 2) * 2,
+    };
   }
 
   render() {
     return (
-      <div id="container" className="snake-container">
+      <div className="snake-container">
         <Food point={this.state.food} />
-        <Snake points={this.state.snake}/>
+        <Snake points={this.state.snake} />
       </div>
     );
   }
-
 }
 
 export default SnakeGame;
