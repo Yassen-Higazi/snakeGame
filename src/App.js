@@ -23,7 +23,7 @@ class SnakeGame extends React.Component {
 
   componentDidUpdate() {
     this.checkIfAteFood();
-    this.checkIfCollapse();
+    this.checkIfCollapsed();
     this.checkIfOutOfBorders();
   }
 
@@ -90,7 +90,7 @@ class SnakeGame extends React.Component {
     }
   }
 
-  checkIfCollapse() {
+  checkIfCollapsed() {
     const snake = [...this.state.snake];
     const head = snake.pop();
     snake.forEach((point) => {
